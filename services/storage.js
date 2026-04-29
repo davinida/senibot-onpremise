@@ -23,6 +23,12 @@ class StorageAdapter {
     throw new Error('구현 필요');
   }
 
+  // 알림 ID로 acknowledged=1 마킹.
+  // 반환: { changes: 영향 받은 row 수 }
+  async acknowledgeAlert(id) {
+    throw new Error('구현 필요');
+  }
+
   // ─── 조회(Read) ───────────────────────────────────────────────
 
   // 최근 limit개의 환경 센서 데이터, 시간 오름차순(오래된 것 → 최신).

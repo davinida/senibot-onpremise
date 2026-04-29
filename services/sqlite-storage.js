@@ -104,6 +104,15 @@ class SQLiteStorage extends StorageAdapter {
     );
   }
 
+  // 알림 ID로 acknowledged=1 마킹. _run이 { lastID, changes } 반환.
+  async acknowledgeAlert(id) {
+    const result = await this._run(
+      `UPDATE alerts SET acknowledged = 1 WHERE id = ?`,
+      [id]
+    );
+    return { changes: result.changes };
+  }
+
   // ─── 조회(Read) ───────────────────────────────────────────────
 
   // 최신 limit개를 가져온 뒤 다시 오름차순으로 정렬해서 반환 (그래프용)
