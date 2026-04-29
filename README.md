@@ -104,8 +104,10 @@ senibot/
 │   └── index.html                 # 보호자 대시보드 (단일 HTML, CSS/JS 인라인)
 ├── docs/
 │   ├── architecture.md            # 시스템 아키텍처 상세
-│   ├── api-spec.md                # API 명세서
-│   └── db-schema.md               # DB 스키마 정의서
+│   ├── api-spec.md                # API 명세서 (마크다운)
+│   ├── openapi.yaml               # API 명세서 (OpenAPI 3.0, Swagger UI)
+│   ├── db-schema.md               # DB 스키마 정의서
+│   └── security.md                # 보안 적용 내역서
 ├── .env.example                   # 환경 변수 템플릿
 ├── .env                           # (gitignored) 실제 환경 변수
 ├── .gitignore
@@ -161,6 +163,7 @@ npm run fitbit
 ### 5.4. 접속
 
 - **보호자 대시보드**: `http://<RPi-IP>:3000/`
+- **Swagger UI (API 문서)**: `http://<RPi-IP>:3000/api-docs`
 - **API**: `http://<RPi-IP>:3000/api/dashboard/summary`
 - **헬스체크**: `http://<RPi-IP>:3000/health`
 

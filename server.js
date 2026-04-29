@@ -5,6 +5,8 @@ require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
+const swaggerUi = require('swagger-ui-express');
+const YAML = require('yamljs');
 
 const { initDB } = require('./db/init');
 const SQLiteStorage = require('./services/sqlite-storage');
@@ -37,6 +39,14 @@ app.use(express.static('public'));
     app.use('/api/alerts', require('./routes/alerts')(storage));
     app.use('/api/dashboard', require('./routes/dashboard')(storage));
     app.use('/api/simulator', require('./routes/simulator')(storage));
+
+    // Swagger UI: /api-docs (OpenAPI 3.0 명세는 docs/openapi.yaml)
+    const swaggerDocument = YAML.load('./docs/openapi.yaml');
+    app.use(
+      '/api-docs',
+      swaggerUi.serve,
+      swaggerUi.setup(swaggerDocument, { customSiteTitle: 'SeniBot API 문서' })
+    );
 
     // 6) HTTP 서버 시작
     const PORT = process.env.PORT || 3000;

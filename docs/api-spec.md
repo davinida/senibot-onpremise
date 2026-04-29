@@ -3,6 +3,9 @@
 > Base URL: `http://<RPi-IP>:3000`
 > 모든 응답은 `application/json` (단, `/health`만 단순 객체).
 > 에러 응답은 `{ "error": "<한국어 메시지>" }` 형식.
+>
+> **OpenAPI 3.0 스펙**: [`docs/openapi.yaml`](./openapi.yaml)
+> **Swagger UI**: 서버 기동 시 `http://<RPi-IP>:3000/api-docs` 에서 확인 가능.
 
 ---
 

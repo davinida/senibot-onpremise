@@ -1,0 +1,483 @@
+openapi: 3.0.0
+info:
+  title: SeniBot API
+  version: 1.0.0
+  description: |
+    독거노인을 위한 On-Premise 스마트 돌봄 시스템 API.
+    환경 센서(DHT11)와 Fitbit 데이터를 통합하여 보호자에게 어르신의 실시간 상태를 제공합니다.
+
+    - 알림 룰: 환경 4종(TEMP/HUMID HIGH·LOW) + Fitbit 3종(HR HIGH·LOW, LOW_ACTIVITY)
+    - 같은 `alert_type`은 `ALERT_DEBOUNCE_SEC`(기본 300초) 내에 다시 발화되지 않습니다.
+  contact:
+    name: 11팀 최다빈 (건국대학교 클라우드 IoT 서비스)
+
+servers:
+  - url: http://localhost:3000
+    description: 로컬 / RPi 개발 서버
+
+tags:
+  - name: Health
+    description: 헬스체크
+  - name: Environment
+    description: DHT11 환경 센서 데이터
+  - name: Fitbit
+    description: Fitbit 건강 데이터
+  - name: Alerts
+    description: 알림 관리
+  - name: Dashboard
+    description: 보호자 대시보드 통합 데이터
+  - name: Simulator
+    description: 시연용 트리거 (개발/시연 모드)
+
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: 헬스체크
+      description: 서버가 살아있는지 단순 확인.
+      responses:
+        '200':
+          description: 서버 정상
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+
+  /api/environment/current:
+    get:
+      tags: [Environment]
+      summary: 가장 최근 환경 데이터
+      description: 데이터가 없으면 `null`을 반환합니다.
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/EnvironmentData'
+                  - type: 'null'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/environment/history:
+    get:
+      tags: [Environment]
+      summary: 환경 데이터 이력 (시간 오름차순)
+      description: 그래프용. 최근 limit개를 오래된 것 → 최신 순으로 반환.
+      parameters:
+        - name: limit
+          in: query
+          description: 조회 개수 (1~500 자동 클램프)
+          schema:
+            type: integer
+            default: 50
+            minimum: 1
+            maximum: 500
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EnvironmentData'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/fitbit/latest:
+    get:
+      tags: [Fitbit]
+      summary: 가장 최근 Fitbit 데이터
+      description: 데이터가 없으면 `null`을 반환합니다.
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/FitbitData'
+                  - type: 'null'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/fitbit/history:
+    get:
+      tags: [Fitbit]
+      summary: Fitbit 데이터 이력 (시간 오름차순)
+      parameters:
+        - name: limit
+          in: query
+          description: 조회 개수 (1~200 자동 클램프)
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 200
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FitbitData'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/alerts:
+    get:
+      tags: [Alerts]
+      summary: 알림 목록 (시간 내림차순)
+      parameters:
+        - name: limit
+          in: query
+          description: 조회 개수 (1~200 자동 클램프)
+          schema:
+            type: integer
+            default: 30
+            minimum: 1
+            maximum: 200
+        - name: unacknowledged_only
+          in: query
+          description: '`true`이면 acknowledged=0 만 반환 (필터 후 결과가 limit보다 적을 수 있음)'
+          schema:
+            type: string
+            enum: ['true', 'false']
+            default: 'false'
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Alert'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/alerts/{id}/acknowledge:
+    post:
+      tags: [Alerts]
+      summary: 알림 확인 처리
+      description: 해당 알림을 acknowledged=1 로 마킹합니다.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 알림 ID (정수)
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+        '400':
+          description: 잘못된 ID (정수 파싱 실패)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: 잘못된 ID
+        '404':
+          description: 해당 ID 알림 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: 알림을 찾을 수 없음
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/dashboard/summary:
+    get:
+      tags: [Dashboard]
+      summary: 보호자 대시보드 통합 응답
+      description: |
+        senior.status 판정:
+        - 미확인 알림에 EMERGENCY 있으면 `emergency`
+        - 미확인 알림에 WARNING 있으면 `warning`
+        - 그 외 `normal`
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardSummary'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/simulator/trigger/heart-rate-high:
+    post:
+      tags: [Simulator]
+      summary: 시연 트리거 — 심박수 이상
+      description: 다음 측정(최대 1분 후)에 HR을 105 bpm으로 강제하여 HR_HIGH 알림을 발화시킵니다.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                durationSec:
+                  type: integer
+                  description: 트리거 활성 시간(초). 10~600 자동 클램프.
+                  default: 120
+                  minimum: 10
+                  maximum: 600
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TriggerResult'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/simulator/trigger/low-activity:
+    post:
+      tags: [Simulator]
+      summary: 시연 트리거 — 활동량 급감
+      description: steps를 시드의 20%로 강제하여 LOW_ACTIVITY 알림을 발화시킵니다.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                durationSec:
+                  type: integer
+                  description: 트리거 활성 시간(초). 10~1800 자동 클램프.
+                  default: 300
+                  minimum: 10
+                  maximum: 1800
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TriggerResult'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/simulator/reset:
+    post:
+      tags: [Simulator]
+      summary: 모든 트리거 즉시 무효화
+      description: 만료 시각을 과거(`1970-01-01T00:00:00.000Z`)로 덮어써 멱등하게 무효화합니다.
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reset:
+                    type: boolean
+                    example: true
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/simulator/status:
+    get:
+      tags: [Simulator]
+      summary: 트리거 활성 상태 조회
+      description: 만료된 트리거는 `null`로 반환됩니다.
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimulatorStatus'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+components:
+  responses:
+    ServerError:
+      description: 서버 내부 에러
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: 사용자에게 노출되는 한국어 메시지
+          example: 환경 데이터 조회 실패
+
+    EnvironmentData:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 123
+        timestamp:
+          type: string
+          format: date-time
+          example: '2026-04-30T15:23:45.000Z'
+        sensor_type:
+          type: string
+          example: DHT11
+        temperature:
+          type: number
+          format: float
+          example: 25.4
+        humidity:
+          type: number
+          format: float
+          example: 58.0
+        created_at:
+          type: string
+          example: '2026-04-30 15:23:45'
+
+    FitbitData:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 42
+        user_id:
+          type: string
+          example: senior_001
+        timestamp:
+          type: string
+          format: date-time
+        heart_rate:
+          type: integer
+          example: 72
+        steps:
+          type: integer
+          example: 1923
+        sleep_score:
+          type: integer
+          nullable: true
+          example: 78
+        spo2:
+          type: number
+          format: float
+          example: 97.0
+        created_at:
+          type: string
+
+    Alert:
+      type: object
+      properties:
+        id:
+          type: integer
+        timestamp:
+          type: string
+          format: date-time
+        alert_type:
+          type: string
+          enum: [TEMP_HIGH, TEMP_LOW, HUMID_HIGH, HUMID_LOW, HR_HIGH, HR_LOW, LOW_ACTIVITY]
+        level:
+          type: string
+          enum: [INFO, WARNING, EMERGENCY]
+        message:
+          type: string
+          example: '어머니의 안정 시 심박수가 높습니다 (105 bpm). 즉시 안부 확인 권장.'
+        data:
+          type: string
+          description: JSON 문자열로 직렬화된 원본 데이터
+          example: '{"heart_rate":105,"threshold":100}'
+        acknowledged:
+          type: integer
+          enum: [0, 1]
+        created_at:
+          type: string
+
+    DashboardSummary:
+      type: object
+      properties:
+        senior:
+          type: object
+          properties:
+            name:
+              type: string
+              example: 김복순
+            status:
+              type: string
+              enum: [normal, warning, emergency]
+        guardian:
+          type: object
+          properties:
+            name:
+              type: string
+              example: 김민준
+            phone:
+              type: string
+              example: 010-1234-5678
+        fitbit:
+          oneOf:
+            - $ref: '#/components/schemas/FitbitData'
+            - type: 'null'
+        environment:
+          oneOf:
+            - $ref: '#/components/schemas/EnvironmentData'
+            - type: 'null'
+        unacknowledged_alerts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Alert'
+
+    TriggerResult:
+      type: object
+      properties:
+        triggered:
+          type: boolean
+          example: true
+        key:
+          type: string
+          example: heart_rate_override
+        expiresAt:
+          type: string
+          format: date-time
+
+    SimulatorState:
+      type: object
+      description: 시뮬레이터 트리거의 활성 페이로드 (활성일 때)
+      additionalProperties: true
+      example:
+        active: true
+        target_hr: 105
+        reason: 시연용 심박수 이상 트리거
+
+    SimulatorStatus:
+      type: object
+      properties:
+        heart_rate_override:
+          oneOf:
+            - $ref: '#/components/schemas/SimulatorState'
+            - type: 'null'
+        low_activity_override:
+          oneOf:
+            - $ref: '#/components/schemas/SimulatorState'
+            - type: 'null'
