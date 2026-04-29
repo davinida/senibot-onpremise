@@ -16,34 +16,34 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                        보호자 (자녀)                             │
-│            웹 브라우저 — 보호자 대시보드 (5초 자동 갱신)         │
+│                        보호자 (자녀)                               │
+│            웹 브라우저 — 보호자 대시보드 (5초 자동 갱신)                  │
 └────────────────────────┬────────────────────────────────────────┘
                          │ HTTP (REST + JSON)
 ┌────────────────────────▼────────────────────────────────────────┐
-│  [서비스 Layer]   Express.js  (server.js)                        │
+│  [서비스 Layer]   Express.js  (server.js)                          │ 
 │   ├─ /api/environment   /api/fitbit   /api/alerts                │
-│   ├─ /api/dashboard/summary    (보호자 통합 응답)                │
-│   └─ /api/simulator/*          (시연용 트리거)                    │
+│   ├─ /api/dashboard/summary    (보호자 통합 응답)                    │
+│   └─ /api/simulator/*          (시연용 트리거)                      │
 └──┬──────────────────────────────────────────────────────────────┘
    │
 ┌──▼──────────────────────────────────────────────────────────────┐
-│  [저장 Layer]    SQLite (senibot.db)                             │
+│  [저장 Layer]    SQLite (senibot.db)                              │
 │    fitbit_data │ sensor_data │ alerts │ simulator_state          │
-│   ▲ StorageAdapter (인터페이스) ─ SQLiteStorage (구현)           │
+│   ▲ StorageAdapter (인터페이스) ─ SQLiteStorage (구현)               │
 └──▲──────────────────────────────────────────────────────────────┘
    │ saveSensorData / saveFitbitData / saveAlert
 ┌──┴──────────────────────────────────────────────────────────────┐
 │  [처리 Layer]                                                    │
-│   ┌─ mqtt-handler   : MQTT 구독 → 저장 → 알림 평가              │
-│   ├─ fitbit-publisher: 시뮬레이터 → 저장 → 알림 평가             │
-│   └─ alert-engine   : Rule-based 평가 + 디바운싱(5분)            │
+│   ┌─ mqtt-handler   : MQTT 구독 → 저장 → 알림 평가                   │
+│   ├─ fitbit-publisher: 시뮬레이터 → 저장 → 알림 평가                   │
+│   └─ alert-engine   : Rule-based 평가 + 디바운싱(5분)                │
 └──▲──────────────────────────────────────────────────────────────┘
    │ MQTT publish (senibot/sensor/dht11)            │ 1분 주기
 ┌──┴──────────────────────────────┐  ┌──────────────▼─────────────┐
-│ [수집 A]  DHT11 → GPIO          │  │ [수집 B]  FitbitSimulator  │
-│   sensor-publisher.js (10초)    │  │   HealthDataSource (구현)  │
-│   Mosquitto (localhost:1883)    │  │   본인 Charge 5 실측 시드   │
+│ [수집 A]  DHT11 → GPIO           │  │ [수집 B]  FitbitSimulator    │
+│   sensor-publisher.js (10초)     │  │   HealthDataSource (구현)   │
+│   Mosquitto (localhost:1883)    │  │   본인 Charge 5 실측 시드      │
 └─────────────────────────────────┘  └────────────────────────────┘
 ```
 
