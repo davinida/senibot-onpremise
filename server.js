@@ -39,6 +39,7 @@ app.use(express.static('public'));
     app.use('/api/fitbit', require('./routes/fitbit')(storage));
     app.use('/api/alerts', require('./routes/alerts')(storage));
     app.use('/api/dashboard', require('./routes/dashboard')(storage));
+    app.use('/api/simulator', require('./routes/simulator')(storage));
 
     // 6) HTTP 서버 시작
     const PORT = process.env.PORT || 3000;

@@ -12,6 +12,7 @@ require('dotenv').config();
 const { initDB } = require('./db/init');
 const SQLiteStorage = require('./services/sqlite-storage');
 const FitbitSimulator = require('./services/fitbit-simulator');
+const { evaluateFitbitAlerts } = require('./services/alert-engine');
 
 const INTERVAL_MS = 60_000; // 1분 주기
 
@@ -27,8 +28,9 @@ const INTERVAL_MS = 60_000; // 1분 주기
   const simulator = new FitbitSimulator(storage);
 
   async function tick() {
+    let snapshot;
     try {
-      const snapshot = await simulator.getCurrentSnapshot();
+      snapshot = await simulator.getCurrentSnapshot();
       // user_id는 SQL 디폴트('senior_001') 사용. 명시 생략.
       await storage.saveFitbitData(snapshot);
 
@@ -39,6 +41,14 @@ const INTERVAL_MS = 60_000; // 1분 주기
       );
     } catch (err) {
       console.error('[Fitbit] tick 실패:', err.message || err);
+      return;
+    }
+
+    // 알림 평가는 저장과 분리된 try/catch
+    try {
+      await evaluateFitbitAlerts(storage, snapshot);
+    } catch (err) {
+      console.error('[Fitbit] 알림 평가 실패:', err.message || err);
     }
   }
 

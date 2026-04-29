@@ -8,6 +8,7 @@
 
 require('dotenv').config();
 const mqtt = require('mqtt');
+const { evaluateEnvironmentAlerts } = require('./alert-engine');
 
 const BROKER = process.env.MQTT_BROKER || 'mqtt://localhost:1883';
 const TOPIC = 'senibot/sensor/dht11';
@@ -59,7 +60,13 @@ function startMqttHandler(storage) {
     } catch (saveErr) {
       console.error('[MQTT] 저장 실패:', saveErr.message || saveErr);
     }
-    // Phase 5에서 알림 엔진 호출 추가 예정
+
+    // 알림 엔진 평가는 저장과 분리된 try/catch로 (한쪽 실패가 다른 쪽 막지 않게)
+    try {
+      await evaluateEnvironmentAlerts(storage, data);
+    } catch (alertErr) {
+      console.error('[MQTT] 알림 평가 실패:', alertErr.message || alertErr);
+    }
   });
 
   return client;
