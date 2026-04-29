@@ -28,11 +28,8 @@ app.use(express.static('public'));
     // 3) MQTT 구독 시작
     startMqttHandler(storage);
 
-    // 4) 헬스체크 + 임시 루트 (public/index.html이 있으면 그쪽이 우선)
+    // 4) 헬스체크 (루트 /는 public/index.html이 자동 서빙)
     app.get('/health', (req, res) => res.json({ status: 'ok' }));
-    app.get('/', (req, res) => {
-      res.send('SeniBot API 서버. /api/dashboard/summary 시도.');
-    });
 
     // 5) API 라우트 등록 (storage 주입 패턴)
     app.use('/api/environment', require('./routes/environment')(storage));
