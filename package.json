@@ -1,0 +1,35 @@
+{
+  "name": "senibot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "sensor": "sudo node sensor-publisher.js",
+    "fitbit": "node fitbit-publisher.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/davinida/senibot-onpremise.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/davinida/senibot-onpremise/issues"
+  },
+  "homepage": "https://github.com/davinida/senibot-onpremise#readme",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "mqtt": "^5.15.1",
+    "node-dht-sensor": "^0.5.0",
+    "sqlite3": "^6.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}

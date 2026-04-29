@@ -1,0 +1,14 @@
+# 의존성
+node_modules/
+
+# 데이터베이스 파일
+*.db
+
+# 환경 변수
+.env
+
+# OS 메타파일
+.DS_Store
+
+# 로그
+*.log
