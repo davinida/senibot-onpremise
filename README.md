@@ -4,7 +4,7 @@
 > Fitbit Charge 5의 데이터를 통합해 어르신의 위험 상황을 자동 감지하고,
 > 보호자(자녀)가 원격으로 어르신 상태를 모니터링할 수 있게 합니다.
 
-- **수업**: 클라우드 IoT 서비스 — 프로젝트 #3 (On-Premise 단계)
+- **수업**: 건국대학교 클라우드 IoT 서비스 — 프로젝트 #3 (On-Premise 단계)
 - **팀**: 11팀 — 최다빈, 조용찬, 조상윤, 투굴두루
 <img width="2940" height="1666" alt="image" src="https://github.com/user-attachments/assets/63178f49-30dc-4e3e-96e8-3cb07a268a45" />
 
