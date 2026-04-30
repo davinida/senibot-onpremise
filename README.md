@@ -6,7 +6,10 @@
 
 - **수업**: 클라우드 IoT 서비스 — 프로젝트 #3 (On-Premise 단계)
 - **팀**: 11팀 — 최다빈, 조용찬, 조상윤, 투굴두루
-- **마감**: 2026년 4월 30일
+<img width="2940" height="1666" alt="image" src="https://github.com/user-attachments/assets/63178f49-30dc-4e3e-96e8-3cb07a268a45" />
+
+<img width="1372" height="762" alt="image" src="https://github.com/user-attachments/assets/d031c3ae-d72c-4e39-8c5a-b7a82ff46ec7" />
+<img width="1362" height="293" alt="image" src="https://github.com/user-attachments/assets/cbf35548-a574-4d62-8aa8-cbc9485b9d49" />
 
 ---
 
